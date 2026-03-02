@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Chugz</title>
+    <script>
+      // Single Page Apps for GitHub Pages
+      // https://github.com/rafgraph/spa-github-pages
+      // Updated for base path /ChugzSite/
+      var pathSegmentsToKeep = 1; // Keep /ChugzSite
+      var l = window.location;
+      var basePath = '/ChugzSite/';
+      
+      // If we're not already at the base path, redirect
+      if (!l.pathname.startsWith(basePath)) {
+        l.replace(basePath + '?/' + l.pathname.slice(1).replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash);
+      } else {
+        // We're at the base path, handle the route
+        var path = l.pathname.slice(basePath.length - 1);
+        l.replace(
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          basePath + '?/' +
+          path.replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+        );
+      }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
