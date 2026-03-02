@@ -1,0 +1,51 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build:gh-pages
+      
+      - name: Verify Build
+        run: node verify-build.js
+      
+      - name: List files to deploy
+        run: |
+          echo "Files in dist folder:"
+          ls -la dist/
+          echo "Content of dist/index.html (first 20 lines):"
+          head -20 dist/index.html
+          echo "Checking for main.tsx reference:"
+          grep -n "main.tsx" dist/index.html || echo "No main.tsx reference found (good!)"
+          echo "Checking manifest path:"
+          grep -n "site.webmanifest" dist/index.html || echo "No manifest reference found"
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          cname: false
+          destination_dir: .

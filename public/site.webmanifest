@@ -1,0 +1,9 @@
+{
+  "name": "Chugz",
+  "short_name": "Chugz",
+  "description": "הפוך את הלילה שלך לבלתי נשכח",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#B072DC"
+}
