@@ -15,7 +15,7 @@
         // If we're at the exact base path (with or without trailing slash), redirect to ?/
         if (l.pathname === basePath || l.pathname === basePath.slice(0, -1)) {
           // Check if we already have the query parameter (already redirected)
-          if (!l.search.includes('?/')) {
+          if (!l.search || !l.search.startsWith('?/')) {
             // Redirect to base path with query parameter so React Router can handle it
             window.location.replace(basePath + '?/');
             return;
@@ -28,26 +28,36 @@
           return;
         }
         
+        // Check if we've already redirected (search starts with ?/)
+        if (l.search && l.search.startsWith('?/')) {
+          // Already redirected, let React Router handle it
+          return;
+        }
+        
         // If we're not at the base path, redirect
         if (!l.pathname.startsWith(basePath)) {
-          l.replace(basePath + '?/' + l.pathname.slice(1).replace(/&/g, '~and~') +
-            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-            l.hash);
+          var pathToAdd = l.pathname.slice(1).replace(/&/g, '~and~');
+          var newSearch = l.search ? l.search.slice(1).replace(/&/g, '~and~') : '';
+          l.replace(basePath + '?/' + pathToAdd + (newSearch ? '&' + newSearch : '') + l.hash);
         } else {
           // We're at a sub-path of base path, handle the route
-          var path = l.pathname.slice(basePath.length - 1);
-          // Check if we have the query parameter already
-          if (l.search.includes('?/')) {
-            // Already redirected, let React Router handle it
-            return;
+          // Extract path after base path (remove leading slash if present)
+          var path = l.pathname.slice(basePath.length);
+          if (path.startsWith('/')) {
+            path = path.slice(1);
           }
-          l.replace(
-            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            basePath + '?/' +
-            path.replace(/&/g, '~and~') +
-            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-            l.hash
-          );
+          
+          // Build the redirect URL
+          var pathPart = path ? path.replace(/&/g, '~and~') : '';
+          var queryPart = l.search ? l.search.slice(1).replace(/&/g, '~and~') : '';
+          
+          var redirectUrl = basePath + '?/' + pathPart;
+          if (queryPart) {
+            redirectUrl += '&' + queryPart;
+          }
+          redirectUrl += l.hash;
+          
+          l.replace(redirectUrl);
         }
       })();
     </script>
