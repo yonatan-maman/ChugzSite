@@ -81,13 +81,14 @@ export default function JoinBar() {
       // Try to open the app immediately
       window.location.href = customSchemeUrl;
       
-      // Set a timeout to show download options if app doesn't open
+      // Set a timeout to redirect to website if app doesn't open
       const timeout = setTimeout(() => {
-        setAppInstalled(false);
-        setIsChecking(false);
+        // If app didn't open, redirect to website with same parameters
+        const websiteUrl = `https://chugz.app/join?${queryString}`;
+        window.location.href = websiteUrl;
       }, 2000);
       
-      // If page loses focus, app likely opened
+      // If page loses focus, app likely opened - clear timeout
       const handleBlur = () => {
         clearTimeout(timeout);
         setAppInstalled(true);
@@ -111,9 +112,9 @@ export default function JoinBar() {
       
       setIsChecking(true);
     } else {
-      // Desktop - show download options immediately
-      setAppInstalled(false);
-      setIsChecking(false);
+      // Desktop - redirect to website immediately
+      const websiteUrl = `https://chugz.app/join?${queryString}`;
+      window.location.href = websiteUrl;
     }
   }, [barId, tableId]);
 
