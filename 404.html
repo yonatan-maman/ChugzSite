@@ -11,14 +11,29 @@
       var l = window.location;
       var basePath = '/ChugzSite/';
       
-      // If we're not already at the base path, redirect
+      // If we're at the exact base path (with or without trailing slash), load index.html
+      if (l.pathname === basePath || l.pathname === basePath.slice(0, -1)) {
+        // Check if we already have the query parameter (already redirected)
+        if (!l.search.includes('?/')) {
+          // Load index.html directly by redirecting to it
+          window.location.replace(basePath + 'index.html');
+          return;
+        }
+      }
+      
+      // If we're not at the base path, redirect
       if (!l.pathname.startsWith(basePath)) {
         l.replace(basePath + '?/' + l.pathname.slice(1).replace(/&/g, '~and~') +
           (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
           l.hash);
       } else {
-        // We're at the base path, handle the route
+        // We're at a sub-path of base path, handle the route
         var path = l.pathname.slice(basePath.length - 1);
+        // Check if we have the query parameter already
+        if (l.search.includes('?/')) {
+          // Already redirected, let React Router handle it
+          return;
+        }
         l.replace(
           l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
           basePath + '?/' +
