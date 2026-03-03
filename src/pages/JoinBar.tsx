@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useSearchParams, Link } from "react-router-dom";
-import { ArrowRight, Users, MapPin, Clock, Smartphone, Download } from "lucide-react";
+import { ArrowRight, Users, MapPin, Smartphone } from "lucide-react";
 
 export default function JoinBar() {
   const [searchParams] = useSearchParams();
@@ -11,7 +11,6 @@ export default function JoinBar() {
   const [isEnglish, setIsEnglish] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [appInstalled, setAppInstalled] = useState(false);
-  const [countdown, setCountdown] = useState(5);
 
   const content = {
     title: isEnglish ? "Join the Table" : "הצטרף לשולחן",
@@ -21,8 +20,6 @@ export default function JoinBar() {
     checking: isEnglish ? "Checking for app..." : "בודק אפליקציה...",
     opening: isEnglish ? "Opening app..." : "פותח אפליקציה...",
     notInstalled: isEnglish ? "App not installed" : "האפליקציה לא מותקנת",
-    redirecting: isEnglish ? "Redirecting to download..." : "מעביר להורדה...",
-    redirectNow: isEnglish ? "Redirect Now" : "העבר עכשיו",
     downloadTitle: isEnglish ? "Download CHUGZ" : "הורד את CHUGZ",
     downloadDesc: isEnglish 
       ? "Install the app to join tables, play games, and meet new people at bars near you."
@@ -118,23 +115,7 @@ export default function JoinBar() {
     }
   }, [barId, tableId]);
 
-  // Countdown timer for auto-redirect
-  useEffect(() => {
-    if (!isChecking && !appInstalled) {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            redirectToDownload();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isChecking, appInstalled]);
+  // Countdown timer removed - no auto-redirect to app stores
 
   const tryOpenApp = () => {
     // Redirect directly to custom scheme URL
@@ -279,20 +260,6 @@ export default function JoinBar() {
                       </div>
                     </button>
                   </div>
-
-                  {/* Countdown */}
-                  <div className="flex items-center justify-center gap-3 text-text-secondary">
-                    <Clock className="w-5 h-5" />
-                    <span>
-                      {content.redirecting} {countdown > 0 && `(${countdown}s)`}
-                    </span>
-                  </div>
-                  <button
-                    onClick={redirectToDownload}
-                    className="mt-4 text-brand-primary hover:text-brand-container transition-colors font-bold underline"
-                  >
-                    {content.redirectNow}
-                  </button>
                 </div>
               </>
             )}
