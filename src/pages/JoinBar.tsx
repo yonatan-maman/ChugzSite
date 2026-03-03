@@ -74,18 +74,16 @@ export default function JoinBar() {
     (window as any).customSchemeUrl = customSchemeUrl;
     
     // Redirect to custom scheme URL immediately
-    const websiteUrl = `https://chugz.app/join?${queryString}`;
-    
     if (isIOS || isAndroid) {
       // Try to open the app immediately with custom scheme
       window.location.href = customSchemeUrl;
       
-      // Set a very short timeout to redirect to website before Play Store redirect happens
-      // This prevents Android from redirecting to Play Store
+      // Set a timeout to detect if app opened
       const timeout = setTimeout(() => {
-        // If app didn't open, redirect to website with same parameters
-        window.location.href = websiteUrl;
-      }, 1000); // Short timeout to prevent Play Store redirect
+        // If app didn't open, show download options
+        setAppInstalled(false);
+        setIsChecking(false);
+      }, 2000);
       
       // If page loses focus, app likely opened - clear timeout
       const handleBlur = () => {
@@ -111,8 +109,9 @@ export default function JoinBar() {
       
       setIsChecking(true);
     } else {
-      // Desktop - redirect to website immediately
-      window.location.href = websiteUrl;
+      // Desktop - show download options immediately
+      setAppInstalled(false);
+      setIsChecking(false);
     }
   }, [barId, tableId]);
 
