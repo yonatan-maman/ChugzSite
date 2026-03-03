@@ -53,101 +53,68 @@ export default function JoinBar() {
     return params.toString();
   };
 
-  // Detect if app is installed and handle deep linking
+  // Redirect to custom scheme URL immediately
   useEffect(() => {
-    const checkAndOpenApp = async () => {
-      setIsChecking(true);
+    const queryString = buildQueryString();
+    
+    // Custom URL Scheme - redirect immediately
+    const customSchemeUrl = `chugz://join?${queryString}`;
+    
+    // Store URLs for download buttons
+    const iosAppStoreUrl = "https://apps.apple.com/app/chugz/id123456789"; // Replace with actual App Store ID
+    const androidPlayStoreUrl = "https://play.google.com/store/apps/details?id=com.chugz.app"; // Replace with actual package name
+    
+    // Detect device type
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+    const isAndroid = /android/i.test(userAgent);
+    
+    // Store redirect URLs for download buttons
+    (window as any).iosAppStoreUrl = iosAppStoreUrl;
+    (window as any).androidPlayStoreUrl = androidPlayStoreUrl;
+    (window as any).isIOS = isIOS;
+    (window as any).isAndroid = isAndroid;
+    (window as any).customSchemeUrl = customSchemeUrl;
+    
+    // Redirect to custom scheme URL immediately
+    if (isIOS || isAndroid) {
+      // Try to open the app immediately
+      window.location.href = customSchemeUrl;
       
-      const queryString = buildQueryString();
+      // Set a timeout to show download options if app doesn't open
+      const timeout = setTimeout(() => {
+        setAppInstalled(false);
+        setIsChecking(false);
+      }, 2000);
       
-      // Custom URL Scheme (works immediately, no domain setup required)
-      const customSchemeUrl = `chugz://join?${queryString}`;
+      // If page loses focus, app likely opened
+      const handleBlur = () => {
+        clearTimeout(timeout);
+        setAppInstalled(true);
+        setIsChecking(false);
+        window.removeEventListener('blur', handleBlur);
+        window.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
       
-      // HTTPS Universal/App Link (requires domain setup)
-      const universalLinkUrl = `https://chugz.app/join?${queryString}`;
-      
-      const iosAppStoreUrl = "https://apps.apple.com/app/chugz/id123456789"; // Replace with actual App Store ID
-      const androidPlayStoreUrl = "https://play.google.com/store/apps/details?id=com.chugz.app"; // Replace with actual package name
-      
-      // Detect device type
-      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-      const isAndroid = /android/i.test(userAgent);
-      
-      // Store redirect URLs for later use
-      (window as any).iosAppStoreUrl = iosAppStoreUrl;
-      (window as any).androidPlayStoreUrl = androidPlayStoreUrl;
-      (window as any).isIOS = isIOS;
-      (window as any).isAndroid = isAndroid;
-      (window as any).customSchemeUrl = customSchemeUrl;
-      (window as any).universalLinkUrl = universalLinkUrl;
-      
-      // Try to open the app using both methods
-      if (isIOS || isAndroid) {
-        let appOpened = false;
-        
-        // Try to open app immediately
-        const tryOpenAppLocal = () => {
-          // Try Universal Link first (preferred method)
-          try {
-            window.location.href = universalLinkUrl;
-          } catch (e) {
-            console.log('Universal link failed, trying custom scheme');
-          }
-          
-          // Also try custom scheme as fallback (after a short delay)
-          setTimeout(() => {
-            try {
-              window.location.href = customSchemeUrl;
-            } catch (e) {
-              console.log('Custom scheme failed');
-            }
-          }, 300);
-        };
-        
-        // Try opening immediately
-        tryOpenAppLocal();
-        
-        // Set a timeout to detect if app opened
-        const timeout = setTimeout(() => {
-          // If we're still here after timeout, app probably didn't open
-          if (!appOpened) {
-            setAppInstalled(false);
-            setIsChecking(false);
-          }
-        }, 2000);
-        
-        // If page loses focus, app likely opened
-        const handleBlur = () => {
-          appOpened = true;
+      const handleVisibilityChange = () => {
+        if (document.hidden) {
           clearTimeout(timeout);
           setAppInstalled(true);
           setIsChecking(false);
           window.removeEventListener('blur', handleBlur);
           window.removeEventListener('visibilitychange', handleVisibilityChange);
-        };
-        
-        const handleVisibilityChange = () => {
-          if (document.hidden) {
-            appOpened = true;
-            clearTimeout(timeout);
-            setAppInstalled(true);
-            setIsChecking(false);
-            window.removeEventListener('blur', handleBlur);
-            window.removeEventListener('visibilitychange', handleVisibilityChange);
-          }
-        };
-        
-        window.addEventListener('blur', handleBlur);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-      } else {
-        // Desktop - show download options immediately (no app check needed)
-        setAppInstalled(false);
-        setIsChecking(false);
-      }
-    };
-
-    checkAndOpenApp();
+        }
+      };
+      
+      window.addEventListener('blur', handleBlur);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      setIsChecking(true);
+    } else {
+      // Desktop - show download options immediately
+      setAppInstalled(false);
+      setIsChecking(false);
+    }
   }, [barId, tableId]);
 
   // Countdown timer for auto-redirect
@@ -169,24 +136,9 @@ export default function JoinBar() {
   }, [isChecking, appInstalled]);
 
   const tryOpenApp = () => {
+    // Redirect directly to custom scheme URL
     const customSchemeUrl = (window as any).customSchemeUrl || `chugz://join?${buildQueryString()}`;
-    const universalLinkUrl = (window as any).universalLinkUrl || `https://chugz.app/join?${buildQueryString()}`;
-    
-    // Try Universal Link first
-    try {
-      window.location.href = universalLinkUrl;
-    } catch (e) {
-      console.log('Universal link failed, trying custom scheme');
-    }
-    
-    // Also try custom scheme as fallback
-    setTimeout(() => {
-      try {
-        window.location.href = customSchemeUrl;
-      } catch (e) {
-        console.log('Custom scheme failed');
-      }
-    }, 300);
+    window.location.href = customSchemeUrl;
   };
 
   const redirectToDownload = () => {
