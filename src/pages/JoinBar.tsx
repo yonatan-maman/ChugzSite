@@ -74,64 +74,52 @@ export default function JoinBar() {
       const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
       const isAndroid = /android/i.test(userAgent);
       
+      // Store redirect URLs for later use
+      (window as any).iosAppStoreUrl = iosAppStoreUrl;
+      (window as any).androidPlayStoreUrl = androidPlayStoreUrl;
+      (window as any).isIOS = isIOS;
+      (window as any).isAndroid = isAndroid;
+      (window as any).customSchemeUrl = customSchemeUrl;
+      (window as any).universalLinkUrl = universalLinkUrl;
+      
       // Try to open the app using both methods
       if (isIOS || isAndroid) {
-        // First, try Universal Link (HTTPS) - this is preferred for iOS/Android
-        // If the app is installed and Universal Links are configured, this will work
-        let deepLinkAttempted = false;
+        let appOpened = false;
         
-        // For iOS, try Universal Link first, then fallback to custom scheme
-        if (isIOS) {
-          // Try Universal Link
-          const universalLink = document.createElement('a');
-          universalLink.href = universalLinkUrl;
-          universalLink.style.display = 'none';
-          document.body.appendChild(universalLink);
-          universalLink.click();
-          deepLinkAttempted = true;
+        // Try to open app immediately
+        const tryOpenApp = () => {
+          // Try Universal Link first (preferred method)
+          try {
+            window.location.href = universalLinkUrl;
+          } catch (e) {
+            console.log('Universal link failed, trying custom scheme');
+          }
           
-          // Also try custom scheme as fallback
+          // Also try custom scheme as fallback (after a short delay)
           setTimeout(() => {
-            const customScheme = document.createElement('a');
-            customScheme.href = customSchemeUrl;
-            customScheme.style.display = 'none';
-            document.body.appendChild(customScheme);
-            customScheme.click();
-            setTimeout(() => document.body.removeChild(customScheme), 100);
-          }, 500);
-          
-          setTimeout(() => {
-            document.body.removeChild(universalLink);
-          }, 100);
-        } else if (isAndroid) {
-          // For Android, try both methods
-          // Try Universal Link first
-          const universalLink = document.createElement('a');
-          universalLink.href = universalLinkUrl;
-          universalLink.style.display = 'none';
-          document.body.appendChild(universalLink);
-          universalLink.click();
-          
-          // Also try custom scheme
-          setTimeout(() => {
-            window.location.href = customSchemeUrl;
-          }, 500);
-          
-          setTimeout(() => {
-            document.body.removeChild(universalLink);
-          }, 100);
-          deepLinkAttempted = true;
-        }
+            try {
+              window.location.href = customSchemeUrl;
+            } catch (e) {
+              console.log('Custom scheme failed');
+            }
+          }, 300);
+        };
+        
+        // Try opening immediately
+        tryOpenApp();
         
         // Set a timeout to detect if app opened
         const timeout = setTimeout(() => {
           // If we're still here after timeout, app probably didn't open
-          setAppInstalled(false);
-          setIsChecking(false);
-        }, 2500);
+          if (!appOpened) {
+            setAppInstalled(false);
+            setIsChecking(false);
+          }
+        }, 2000);
         
         // If page loses focus, app likely opened
         const handleBlur = () => {
+          appOpened = true;
           clearTimeout(timeout);
           setAppInstalled(true);
           setIsChecking(false);
@@ -141,6 +129,7 @@ export default function JoinBar() {
         
         const handleVisibilityChange = () => {
           if (document.hidden) {
+            appOpened = true;
             clearTimeout(timeout);
             setAppInstalled(true);
             setIsChecking(false);
@@ -151,14 +140,6 @@ export default function JoinBar() {
         
         window.addEventListener('blur', handleBlur);
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        
-        // Store redirect URLs
-        (window as any).iosAppStoreUrl = iosAppStoreUrl;
-        (window as any).androidPlayStoreUrl = androidPlayStoreUrl;
-        (window as any).isIOS = isIOS;
-        (window as any).isAndroid = isAndroid;
-        (window as any).customSchemeUrl = customSchemeUrl;
-        (window as any).universalLinkUrl = universalLinkUrl;
       } else {
         // Desktop - redirect to download
         setAppInstalled(false);
@@ -186,6 +167,27 @@ export default function JoinBar() {
       return () => clearInterval(timer);
     }
   }, [isChecking, appInstalled]);
+
+  const tryOpenApp = () => {
+    const customSchemeUrl = (window as any).customSchemeUrl || `chugz://join?${buildQueryString()}`;
+    const universalLinkUrl = (window as any).universalLinkUrl || `https://chugz.app/join?${buildQueryString()}`;
+    
+    // Try Universal Link first
+    try {
+      window.location.href = universalLinkUrl;
+    } catch (e) {
+      console.log('Universal link failed, trying custom scheme');
+    }
+    
+    // Also try custom scheme as fallback
+    setTimeout(() => {
+      try {
+        window.location.href = customSchemeUrl;
+      } catch (e) {
+        console.log('Custom scheme failed');
+      }
+    }, 300);
+  };
 
   const redirectToDownload = () => {
     const isIOS = (window as any).isIOS;
@@ -267,6 +269,17 @@ export default function JoinBar() {
                   <p className="text-xl text-text-secondary mb-8 max-w-2xl mx-auto">
                     {content.downloadDesc}
                   </p>
+
+                  {/* Try Opening App Button */}
+                  <div className="mb-8">
+                    <button
+                      onClick={tryOpenApp}
+                      className="w-full sm:w-auto mx-auto flex items-center justify-center gap-3 bg-brand-primary text-white px-8 py-4 rounded-[20px] font-bold text-lg hover:bg-brand-container transition-colors shadow-lg"
+                    >
+                      <Smartphone className="w-5 h-5" />
+                      {isEnglish ? "Open in CHUGZ App" : "פתח באפליקציית CHUGZ"}
+                    </button>
+                  </div>
 
                   {/* Bar/Table Info */}
                   {(barId || tableId) && (
