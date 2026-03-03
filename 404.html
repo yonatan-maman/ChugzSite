@@ -11,14 +11,20 @@
       var l = window.location;
       var basePath = '/ChugzSite/';
       
-      // If we're at the exact base path (with or without trailing slash), load index.html
+      // If we're at the exact base path (with or without trailing slash), redirect to ?/
       if (l.pathname === basePath || l.pathname === basePath.slice(0, -1)) {
         // Check if we already have the query parameter (already redirected)
         if (!l.search.includes('?/')) {
-          // Load index.html directly by redirecting to it
-          window.location.replace(basePath + 'index.html');
+          // Redirect to base path with query parameter so React Router can handle it
+          window.location.replace(basePath + '?/');
           return;
         }
+      }
+      
+      // If we're at /ChugzSite/index.html, redirect to base path
+      if (l.pathname === basePath + 'index.html') {
+        window.location.replace(basePath + '?/');
+        return;
       }
       
       // If we're not at the base path, redirect
