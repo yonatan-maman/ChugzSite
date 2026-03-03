@@ -87,7 +87,7 @@ export default function JoinBar() {
         let appOpened = false;
         
         // Try to open app immediately
-        const tryOpenApp = () => {
+        const tryOpenAppLocal = () => {
           // Try Universal Link first (preferred method)
           try {
             window.location.href = universalLinkUrl;
@@ -106,7 +106,7 @@ export default function JoinBar() {
         };
         
         // Try opening immediately
-        tryOpenApp();
+        tryOpenAppLocal();
         
         // Set a timeout to detect if app opened
         const timeout = setTimeout(() => {
@@ -141,7 +141,7 @@ export default function JoinBar() {
         window.addEventListener('blur', handleBlur);
         document.addEventListener('visibilitychange', handleVisibilityChange);
       } else {
-        // Desktop - redirect to download
+        // Desktop - show download options immediately (no app check needed)
         setAppInstalled(false);
         setIsChecking(false);
       }
